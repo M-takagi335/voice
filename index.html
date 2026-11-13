@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>無料・文章読み上げスタジオ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151d31;--edge:#33415c;--text:#f3f6fb;--muted:#b5c1d3;--blue:#76b7ff}*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#101b37,#0b1020 65%);color:var(--text);font:15px/1.65 system-ui,-apple-system,'Segoe UI',sans-serif}.wrap{max-width:850px;margin:35px auto;padding:0 18px 55px}h1{font-size:clamp(24px,4vw,34px);margin-bottom:4px}.lead{color:var(--muted);margin:0 0 25px}.box{background:var(--panel);border:1px solid var(--edge);border-radius:17px;padding:22px;margin-bottom:17px}h2{font-size:18px;margin:0 0 15px}.field{display:grid;gap:8px;margin-bottom:15px}label{font-weight:650}textarea,input,select{width:100%;color:var(--text);background:#0d1527;border:1px solid #495875;border-radius:9px;padding:11px;font:inherit}textarea{min-height:195px;resize:vertical}input[type=range]{padding:0;accent-color:var(--blue)}input[type=checkbox]{width:auto;accent-color:var(--blue)}.check{display:flex;align-items:center;gap:8px;font-weight:500}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.actions{display:flex;flex-wrap:wrap;gap:10px}button{border:none;border-radius:10px;background:#8ec5ff;color:#07152a;padding:11px 18px;font:700 14px system-ui;cursor:pointer}button.secondary{background:#2e3d59;color:white;border:1px solid #51617e}button:disabled{opacity:.45;cursor:not-allowed}.small,.note{color:var(--muted);font-size:13px}.notice{border-left:3px solid #f1bb65;padding:9px 13px;background:#292334;border-radius:6px}.status{min-height:26px;color:#a8d6ff;font-weight:650}.pill{display:inline-block;font-size:12px;color:#9ddbff;border:1px solid #547ca1;border-radius:99px;padding:2px 8px}audio{width:100%;margin-top:12px}.hidden{display:none}a.down{display:inline-block;background:#8ec5ff;color:#07152a;border-radius:9px;padding:10px 16px;font-weight:700;text-decoration:none}ol{padding-left:21px}@media(max-width:580px){.grid{grid-template-columns:1fr}.box{padding:17px}}
+</style>
+</head>
+<body><main class="wrap">
+<h1>文章読み上げスタジオ <span class="pill">APIキー不要</span></h1>
+<p class="lead">無料で文章を読み上げます。音声は端末・ブラウザにあるものを使用します。</p>
+<section class="box"><h2>① 文章を入力</h2><div class="field"><label for="text">読み上げる文章 <span id="count" class="small">0文字</span></label><textarea id="text" placeholder="ここに読み上げたい文章を入力してください。">こんにちは。これは無料の文章読み上げアプリです。落ち着いた声で文章を読み上げます。</textarea></div><div class="grid"><div class="field"><label for="gender">声のタイプ</label><select id="gender"><option value="female">女性風の声</option><option value="male">男性風の声</option></select></div><div class="field"><label for="voice">音声の候補</label><select id="voice"></select></div><div class="field"><label for="rate">速度：<span id="rateLabel">1.0</span>倍</label><input id="rate" type="range" min="0.6" max="1.5" step="0.05" value="1"></div><div class="field"><label for="pitch">高さ：<span id="pitchLabel">1.0</span></label><input id="pitch" type="range" min="0.7" max="1.3" step="0.05" value="1"></div></div><p class="small">「30代くらい」は声のイメージです。実年齢の指定はできません。男性・女性の声の判定は音声名からの推定で、お使いの端末によって選択肢が異なります。</p><div class="actions"><button id="speak">▶ 読み上げ</button><button id="pause" class="secondary">一時停止 / 再開</button><button id="stop" class="secondary">■ 停止</button></div></section>
+<section class="box"><h2>② 音声ファイルで保存</h2><p class="notice">「保存」を押すと、読み上げ→録音→変換→ダウンロードまで自動で行います。共有の確認が出たら、<strong>「画面全体」</strong>を選び、<strong>「システム音声も共有」をオン</strong>にしてください（Windows の Chrome / Edge）。<strong>「タブ」を選ぶと、読み上げ音声が録音されず無音になります。</strong>録音中は他の音を出さないでください。</p>
+<div class="grid"><div class="field"><label for="fileName">保存ファイル名</label><input id="fileName" value="読み上げ音声" maxlength="100"></div><div class="field"><label for="format">保存形式・音質</label><select id="format"><option value="mp3-192" selected>MP3 192kbps（高音質・おすすめ）</option><option value="mp3-320">MP3 320kbps（最高音質）</option><option value="mp3-128">MP3 128kbps（軽量）</option><option value="wav">WAV（無圧縮・劣化なし）</option></select></div></div>
+<div class="field"><label for="soft">高音のやわらげ（キンキン対策）</label><select id="soft"><option value="0">なし（そのまま録音）</option><option value="1">弱</option><option value="2" selected>中（おすすめ）</option><option value="3">強（こもり気味になります）</option></select></div>
+<div class="field"><label for="ch">チャンネル</label><select id="ch"><option value="stereo" selected>ステレオ（録音のまま）</option><option value="mono">モノラル（左右を平均）</option></select></div>
+<div class="actions"><button id="record">⬇ 録音して保存</button><button id="recordStop" class="secondary" disabled>■ 中止して保存</button></div>
+<p id="status" class="status" role="status">準備完了</p><div id="result" class="hidden"><audio id="player" controls></audio><p><a class="down" id="download" download>もう一度保存</a></p><p id="formatNote" class="small"></p></div></section>
+<section class="box"><h2>音質について</h2><p>録音中はブラウザ標準の録音機能だけを使い、音声には一切手を加えません（最高ビットレート510kbpsで、ほぼ劣化なし）。録音が終わってから、ステレオ処理・高音のやわらげ・MP3（lamejs / CDN）またはWAVへの変換を行います。変換できない環境ではWAVで保存します。</p><p class="small">さらに音質を上げたい場合は、「音声の候補」で「Natural」「Neural」「Online」などと付く声（Edgeなら Microsoft ○○ Online (Natural)）を選ぶと、元の声自体が自然になります。</p><p class="small">料金：0円。文章はこのページから外部の音声生成サービスに送信しません。ただし読み上げ音声をOS側がオンライン提供する場合の通信はブラウザ・OSに依存します。</p></section>
+</main><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),tts=window.speechSynthesis;
+let voices=[],recording=false,stream=null,objUrl=null,ending=false,surface='',cap=null;
+const voiceHints={male:/male|masculine|男|ichiro|otoya|takumi|daichi|naoki|keita|haruka|google 日本語 \(男性\)/i,female:/female|feminine|女|kyoko|nanami|sayaka|mizuki|yuna|ayumi|sakura|google 日本語 \(女性\)/i};
+const tick=()=>new Promise(r=>setTimeout(r,30));
+function cleanName(s){return s.replace(/[\\/:*?"<>|]/g,'_').trim()||'読み上げ音声'}
+function loadVoices(){voices=(tts?.getVoices()||[]).filter(v=>/^ja([_-]|$)/i.test(v.lang));if(!voices.length)voices=tts?.getVoices()||[];const old=$('voice').value;$('voice').innerHTML='';const gender=$('gender').value;const ranked=[...voices].sort((a,b)=>{const score=v=>{let n=0;if(/^ja/i.test(v.lang))n+=10;if(voiceHints[gender].test(v.name))n+=6;if(voiceHints[gender==='male'?'female':'male'].test(v.name))n-=3;if(/natural|neural|premium|enhanced/i.test(v.name))n+=2;return n};return score(b)-score(a)});for(const v of ranked){const o=document.createElement('option');o.value=String(voices.indexOf(v));o.textContent=`${v.name}（${v.lang}）`; $('voice').append(o)}if(old&&[...$('voice').options].some(o=>o.value===old))$('voice').value=old;else $('voice').selectedIndex=0;if(!voices.length){$('voice').innerHTML='<option value="">音声が見つかりません</option>'}}
+let speakToken=0;
+function stopSpeech(){speakToken++;tts?.cancel()}
+function chunkText(t,max=80){const out=[];for(const p of t.split(/(?<=[。！？!?\n])/).map(x=>x.trim()).filter(Boolean)){if(p.length<=max){out.push(p);continue}let cur='';for(const q of p.split(/(?<=[、，,])/)){if(cur&&(cur+q).length>max){out.push(cur);cur=q}else cur+=q}if(cur)out.push(cur)}return out}
+function maxChunkLen(){const v=voices[Number($('voice').value)];return v&&/google/i.test(v.name)?80:100000}
+function makeUtterance(text){const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=Number($('rate').value);u.pitch=Number($('pitch').value);const idx=Number($('voice').value);if(voices[idx])u.voice=voices[idx];return u}
+function setStatus(s){$('status').textContent=s}
+function speak(onDone){if(!tts){setStatus('このブラウザは音声読み上げに対応していません');return false}const t=$('text').value.trim();if(!t){setStatus('文章を入力してください');return false}stopSpeech();const token=speakToken,max=maxChunkLen(),parts=[];for(const s of chunkText(t,max)){if(parts.length&&(parts[parts.length-1]+s).length<=max)parts[parts.length-1]+=s;else parts.push(s)}let i=0;const next=()=>{if(token!==speakToken)return;if(i>=parts.length){onDone?.();return}const u=makeUtterance(parts[i++]);u.onend=next;u.onerror=e=>{if(token!==speakToken)return;if(e.error==='interrupted'||e.error==='canceled')return;next()};tts.speak(u)};setTimeout(next,100);return true}
+$('text').addEventListener('input',()=>{$('count').textContent=[...$('text').value].length+'文字'});$('text').dispatchEvent(new Event('input'));
+for(const k of ['rate','pitch'])$(k).addEventListener('input',()=>$(k+'Label').textContent=Number($(k).value).toFixed(2));
+$('gender').addEventListener('change',()=>{$('voice').value='';loadVoices()});loadVoices();if(tts)tts.onvoiceschanged=loadVoices;
+$('speak').onclick=()=>{setStatus('読み上げ中');speak(()=>setStatus('読み上げ終了'))};
+$('pause').onclick=()=>{if(!tts)return;tts.paused?tts.resume():tts.pause()};
+$('stop').onclick=()=>{stopSpeech();if(recording)finishRecording();else setStatus('停止しました')};
+function clearResult(){if(objUrl){URL.revokeObjectURL(objUrl);objUrl=null}$('result').classList.add('hidden')}
+
+/* ---------- 録音（ブラウザ標準の録音機能のみ。録音中は一切加工しない） ---------- */
+function startCapture(audioTracks){
+  let mime='';
+  for(const m of ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']){if(MediaRecorder.isTypeSupported(m)){mime=m;break}}
+  const opts={audioBitsPerSecond:510000}; // Opusの最高ビットレート（ほぼ劣化なし）
+  if(mime)opts.mimeType=mime;
+  const rec=new MediaRecorder(new MediaStream(audioTracks),opts),chunks=[];
+  rec.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+  rec.onerror=()=>setStatus('録音エラーが発生しました');
+  cap={rec,chunks,mime:rec.mimeType||mime||'audio/webm'};
+  rec.start(1000);
+}
+function stopCapture(){
+  if(!cap)return Promise.resolve(null);
+  const c=cap;cap=null;
+  return new Promise(res=>{
+    const done=()=>res({blob:new Blob(c.chunks,{type:c.mime})});
+    if(c.rec.state==='inactive'){done();return}
+    c.rec.onstop=done;
+    try{c.rec.stop()}catch(e){done()}
+  });
+}
+function cleanup(){if(cap){try{if(cap.rec.state!=='inactive')cap.rec.stop()}catch(e){}cap=null}stream?.getTracks().forEach(t=>t.stop());stream=null;recording=false;ending=false;$('record').disabled=false;$('recordStop').disabled=true}
+
+/* ---------- 録音が終わってからの処理（ステレオ処理・形式変換） ---------- */
+function peakOf(f){let p=0;for(let i=0;i<f.length;i++){const a=Math.abs(f[i]);if(a>p)p=a}return p}
+function toInt16(f){const pcm=new Int16Array(f.length);for(let i=0;i<f.length;i++){const v=Math.max(-1,Math.min(1,f[i]));pcm[i]=Math.round(v<0?v*32768:v*32767)}return pcm}
+function encodeMp3(L,R,rate,kbps,mono){const enc=new lamejs.Mp3Encoder(mono?1:2,rate,kbps),out=[];for(let i=0;i<L.length;i+=1152){const d=mono?enc.encodeBuffer(L.subarray(i,i+1152)):enc.encodeBuffer(L.subarray(i,i+1152),R.subarray(i,i+1152));if(d.length)out.push(new Uint8Array(d))}const e=enc.flush();if(e.length)out.push(new Uint8Array(e));return new Blob(out,{type:'audio/mpeg'})}
+function encodeWav(L,R,rate,mono){const ch=mono?1:2,n=L.length,buf=new ArrayBuffer(44+n*2*ch),v=new DataView(buf),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};w(0,'RIFF');v.setUint32(4,36+n*2*ch,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2*ch,true);v.setUint16(32,2*ch,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2*ch,true);for(let i=0;i<n;i++){if(mono)v.setInt16(44+i*2,L[i],true);else{v.setInt16(44+i*4,L[i],true);v.setInt16(46+i*4,R[i],true)}}return new Blob([buf],{type:'audio/wav'})}
+async function softenHighs(L,R,rate,level){
+  const db=[0,-3,-6,-9][level],n=L.length;
+  const oc=new OfflineAudioContext(2,n,rate),b=oc.createBuffer(2,n,rate);b.copyToChannel(L,0);b.copyToChannel(R,1);
+  const s=oc.createBufferSource();s.buffer=b;
+  const sh=oc.createBiquadFilter();sh.type='highshelf';sh.frequency.value=3000;sh.gain.value=db;
+  const pk=oc.createBiquadFilter();pk.type='peaking';pk.frequency.value=5500;pk.Q.value=1.2;pk.gain.value=db*0.6;
+  const lp=oc.createBiquadFilter();lp.type='lowpass';lp.frequency.value=[0,11000,9000,7000][level];lp.Q.value=0.5;
+  s.connect(sh);sh.connect(pk);pk.connect(lp);lp.connect(oc.destination);s.start();
+  const r=await oc.startRendering();
+  return[r.getChannelData(0),r.getChannelData(1)];
+}
+async function processAndSave(got,usedSurface){
+  setStatus('録音データを読み込み中…');await tick();
+  if(!got||got.blob.size<1500){setStatus('音声データが取得できませんでした');return}
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  let ctx;try{ctx=new Ctx({sampleRate:48000})}catch(e){ctx=new Ctx()}
+  let buf;
+  try{buf=await ctx.decodeAudioData(await got.blob.arrayBuffer())}catch(e){ctx.close();setStatus('録音データを読み込めませんでした：'+e.message);return}
+  ctx.close();
+  const rate=buf.sampleRate;
+  let Lf=buf.getChannelData(0),Rf=buf.numberOfChannels>1?buf.getChannelData(1):buf.getChannelData(0);
+  if(Lf.length<rate*0.2){setStatus('音声データが取得できませんでした');return}
+  if(Math.max(peakOf(Lf),peakOf(Rf))<0.003){setStatus('無音でした。'+(usedSurface==='browser'?'「タブ」を共有したため、読み上げ音声が録音されていません。':'')+'共有画面で「画面全体」を選び、「システム音声も共有」をオンにしてもう一度お試しください（Windows の Chrome / Edge）。');return}
+  const mono=$('ch').value==='mono';
+  if(mono){const m=new Float32Array(Lf.length);for(let i=0;i<m.length;i++)m[i]=(Lf[i]+Rf[i])/2;Lf=m;Rf=m}
+  const soft=Number($('soft').value);
+  if(soft){setStatus('高音をやわらげています…');await tick();[Lf,Rf]=await softenHighs(Lf,Rf,rate,soft)}
+  const L=toInt16(Lf),R=mono?L:toInt16(Rf);
+  const fmt=$('format').value;let blob=null,ext='wav';
+  if(fmt.startsWith('mp3')&&window.lamejs){
+    setStatus('MP3に変換中…');await tick();
+    try{blob=encodeMp3(L,R,rate,Number(fmt.split('-')[1]),mono);ext='mp3'}catch(e){blob=null}
+  }
+  if(!blob){blob=encodeWav(L,R,rate,mono);ext='wav'}
+  objUrl=URL.createObjectURL(blob);$('player').src=objUrl;$('download').href=objUrl;$('download').download=cleanName($('fileName').value)+'.'+ext;$('download').textContent=ext.toUpperCase()+'を保存';$('result').classList.remove('hidden');
+  const kb=Math.round(blob.size/1024);
+  $('formatNote').textContent=(ext==='mp3'?'MP3（'+fmt.split('-')[1]+'kbps）':'WAV（無圧縮）')+'で保存しました。'+(fmt.startsWith('mp3')&&ext!=='mp3'?'（MP3変換ライブラリを読み込めなかったためWAVにしました）':'')+' '+kb+'KB / '+Math.round(rate/1000)+'kHz / '+(mono?'モノラル':'ステレオ');
+  setStatus('保存しました');$('download').click();
+}
+async function finishRecording(){
+  if(ending)return;ending=true;stopSpeech();$('recordStop').disabled=true;
+  const got=await stopCapture();const usedSurface=surface;
+  stream?.getTracks().forEach(t=>t.stop());stream=null;recording=false;
+  try{await processAndSave(got,usedSurface)}catch(e){setStatus('保存処理でエラーが発生しました：'+e.message)}
+  ending=false;$('record').disabled=false;
+}
+$('recordStop').onclick=finishRecording;
+$('record').onclick=async()=>{
+  if(recording)return;
+  if(!navigator.mediaDevices?.getDisplayMedia||!window.MediaRecorder){setStatus('このブラウザは音声の録音に対応していません');return}
+  if(!$('text').value.trim()){setStatus('文章を入力してください');return}
+  clearResult();
+  try{
+    stream=await navigator.mediaDevices.getDisplayMedia({video:{width:{ideal:320},height:{ideal:180},frameRate:{ideal:1,max:5}},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:2},systemAudio:'include'});
+    try{await stream.getVideoTracks()[0]?.applyConstraints({width:{ideal:320},height:{ideal:180},frameRate:{ideal:1,max:5}})}catch(e){}
+    surface=stream.getVideoTracks()[0]?.getSettings?.().displaySurface||'';
+    const audioTracks=stream.getAudioTracks();
+    if(!audioTracks.length){cleanup();setStatus('音声が共有されませんでした。「画面全体」を選び、「システム音声も共有」にチェックしてください');return}
+    startCapture(audioTracks);
+    recording=true;ending=false;$('record').disabled=true;$('recordStop').disabled=false;
+    audioTracks[0].addEventListener('ended',()=>{if(recording)finishRecording()},{once:true});
+    setStatus('読み上げ・録音中…（終わると自動で保存します）');
+    setTimeout(()=>{if(recording)speak(()=>{if(recording)setTimeout(finishRecording,800)})},300);
+  }catch(e){cleanup();setStatus(e.name==='NotAllowedError'?'画面共有が許可されませんでした':'録音を開始できませんでした：'+e.message)}
+};
+})();
+</script></body></html>
